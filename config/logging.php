@@ -65,6 +65,25 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'auth_log' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/auth_errors.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+        'booking_api' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/booking_api_errors.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+        'jobs' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/jobs_errors.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
