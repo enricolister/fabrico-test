@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,11 +20,14 @@ use App\Http\Controllers\AuthController;
     return $request->user();
 }); */
 
+Route::middleware('auth:api')->controller(BookingController::class)->group(function () {
+    Route::post('bookings','makeBooking');
+});
+
 Route::controller(AuthController::class)->group(function () {
     Route::get('token_invalid', 'tokenInvalid')->name('token_invalid');
     Route::post('login', 'login');
     Route::post('register', 'register');
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
-
 });
