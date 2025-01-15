@@ -71,13 +71,13 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
-        'booking_api' => [
+        'booking_api_log' => [
             'driver' => 'single',
             'path' => storage_path('logs/booking_api_errors.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
-        'jobs' => [
+        'jobs_log' => [
             'driver' => 'single',
             'path' => storage_path('logs/jobs_errors.log'),
             'level' => env('LOG_LEVEL', 'debug'),

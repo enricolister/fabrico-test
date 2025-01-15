@@ -22,6 +22,7 @@ class Booking extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'renter_id',
         'date',
         'start_time',
         'end_time',
@@ -35,8 +36,8 @@ class Booking extends Model
      */
     protected $casts = [
         'date' => 'date',
-        'start_time' => 'time',
-        'end_time' => 'time',
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
     ];
 
     /**
