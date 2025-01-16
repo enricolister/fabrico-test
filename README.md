@@ -1,7 +1,9 @@
 
 ## About Fabrico Test
 
-This is an API for managing reservations in a coworking system
+This is an API for managing reservations in a coworking system, created with Laravel framework
+
+Laravel version: v10.48.25
 
 ### How it works
 
