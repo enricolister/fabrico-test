@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 
 class AuthController extends Controller
 {
@@ -20,12 +21,13 @@ class AuthController extends Controller
     }
 
     /**
-     * Returns a JWT token json object if provided token is invalid or expired
+     * Returns an error json object if provided token is invalid or expired
      *
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
      */
+    #[ExcludeRouteFromDocs]
     public function tokenInvalid(Request $request)
     {
         $responseBody = [
@@ -37,11 +39,38 @@ class AuthController extends Controller
     }
 
     /**
-     * Login the client
+     * Authenticate a user and generate a JWT token.
      *
-     * @param Request $request
+     * This method validates the login credentials, attempts authentication,
+     * and returns a JSON response with the user details and JWT token on success.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request The HTTP request object containing login credentials.
+     *                         Expected to have 'email' and 'password' fields.
+     *
+     * @return \Illuminate\Http\JsonResponse A JSON response with the following possible structures:
+     *         - On validation failure:
+     *           {
+     *             "status": "error",
+     *             "message": "Login fields validation failed",
+     *             "fields": {validation_errors}
+     *           }
+     *           (HTTP status code: 422)
+     *         - On authentication failure:
+     *           {
+     *             "status": "error",
+     *             "message": "Wrong login credentials"
+     *           }
+     *           (HTTP status code: 401)
+     *         - On success:
+     *           {
+     *             "status": "success",
+     *             "user": {user_object},
+     *             "authorisation": {
+     *               "token": "JWT_token",
+     *               "type": "bearer"
+     *             }
+     *           }
+     *           (HTTP status code: 200)
      */
     public function login(Request $request)
     {
@@ -85,11 +114,33 @@ class AuthController extends Controller
     }
 
     /**
-     * Register a new client
+     * Register a new client user.
      *
-     * @param Request $request
+     * This method validates the registration data, creates a new user,
+     * logs them in, and returns a JSON response with the user details and JWT token.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param \Illuminate\Http\Request $request The HTTP request object containing registration data.
+     *                                 Expected to have 'name', 'email', and 'password' fields.
+     *
+     * @return \Illuminate\Http\JsonResponse A JSON response with the following possible structures:
+     *         - On validation failure:
+     *           {
+     *             "status": "error",
+     *             "message": "Registration fields validation failed",
+     *             "fields": {validation_errors}
+     *           }
+     *           (HTTP status code: 422)
+     *         - On success:
+     *           {
+     *             "status": "success",
+     *             "message": "User created successfully",
+     *             "user": {user_object},
+     *             "authorisation": {
+     *               "token": "JWT_token",
+     *               "type": "bearer"
+     *             }
+     *           }
+     *           (HTTP status code: 200)
      */
     public function register(Request $request)
     {
@@ -128,9 +179,18 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout the client
+     * Log out the authenticated user.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * This method logs out the currently authenticated user by invalidating their session
+     * and revoking their authentication token. It then returns a JSON response indicating
+     * the successful logout.
+     *
+     * @return \Illuminate\Http\JsonResponse A JSON response with the following structure:
+     *         {
+     *           "status": "success",
+     *           "message": "Successfully logged out"
+     *         }
+     *         (HTTP status code: 200)
      */
     public function logout()
     {
@@ -144,7 +204,17 @@ class AuthController extends Controller
     /**
      * Refresh the user token
      *
-     * @return \Illuminate\Http\JsonResponse
+     * This method refreshes the user's authentication token by generating a new one.
+     *
+     * @return \Illuminate\Http\JsonResponse A JSON response with the following structure:
+     *           {
+     *             "status": "success",
+     *             "user": {user_object},
+     *             "authorisation": {
+     *               "token": "JWT_token",
+     *               "type": "bearer"
+     *             }
+     *           }
      */
     public function refresh()
     {

@@ -11,6 +11,16 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BookingRepository
 {
+    /**
+     * Retrieves bookings for a specific date.
+     *
+     * This function fetches all bookings from the database for the date
+     * specified in the request, ordered by date in ascending order.
+     *
+     * @param Request $request The HTTP request object containing the date parameter.
+     *
+     * @return Collection A collection of Booking models for the specified date.
+     */
     public function getBookingsForDate(Request $request): Collection
     {
         $bookings = Booking::whereDate('date',$request->date)
@@ -19,6 +29,16 @@ class BookingRepository
         return $bookings;
     }
 
+    /**
+     * Calculate the duration of a booking in minutes.
+     *
+     * This function takes a request object containing start and end times,
+     * parses them into Carbon instances, and calculates the difference in minutes.
+     *
+     * @param Request $request The HTTP request object containing start_time and end_time parameters.
+     *
+     * @return int The duration of the booking in minutes.
+     */
     public function getBookingDuration(Request $request): int
     {
         $init_time = Carbon::parse($request->start_time);
@@ -27,6 +47,17 @@ class BookingRepository
         return $duration;
     }
 
+    /**
+     * Check if a new booking overlaps with existing bookings.
+     *
+     * This function compares the start and end times of a new booking request
+     * against a collection of existing bookings to determine if there's any overlap.
+     *
+     * @param Collection $existingBookings A collection of existing Booking models to check against.
+     * @param Request $request The HTTP request object containing the new booking's start_time and end_time.
+     *
+     * @return bool Returns true if the new booking overlaps with any existing booking, false otherwise.
+     */
     public function checkIfBookingOverlaps(Collection $existingBookings, Request $request): bool
     {
         foreach ($existingBookings as $booking) {
@@ -44,6 +75,28 @@ class BookingRepository
         return false;
     }
 
+    /**
+     * Save a new booking and associated renter information.
+     *
+     * This function processes a booking request, creating or updating a renter
+     * based on the provided email, and then creates a new booking associated
+     * with that renter.
+     *
+     * @param Request $request The HTTP request object containing booking and renter information.
+     *                         Expected to contain:
+     *                         - date: The date of the booking
+     *                         - start_time: The start time of the booking
+     *                         - end_time: The end time of the booking
+     *                         - type: The type of booking
+     *                         - Other renter information fields
+     *                         - firstname: The renter's first name
+     *                         - lastname: The renter's last name
+     *                         - address: The renter's address (optional)
+     *                         - email: The renter's email address (optional)
+     *                         - phone: The renter's phone number (optional)
+     *
+     * @return bool Returns true if the booking was successfully saved, false otherwise.
+     */
     public function saveBooking(Request $request): bool
     {
         $input = $request->all();
