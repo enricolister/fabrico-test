@@ -25,7 +25,9 @@ When 10 bookings are reached, the system sends an asyncronous email alert to the
 
 • GET /api/bookings: Retrieve all bookings given a date
 
-## For a complete documentation, created with dedoc/scramble, visit root web route ("/")
+• AUTH ROUTES to register an user to make bookings, login, logout and refresh auth token: see complete documentation
+
+## For the complete documentation, created with dedoc/scramble, visit root web route ("/")
 
 ### Error Handling
 
