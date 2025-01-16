@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendEmailQueueJob;
 use App\Repositories\BookingRepository;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -17,6 +18,31 @@ class BookingController extends Controller
         $this->repository = $repository;
     }
 
+    /**
+     * Process and create a new booking.
+     *
+     * This method handles the creation of a new booking, including validation of input data,
+     * checking for booking conflicts, and sending confirmation emails.
+     *
+     * @param \Illuminate\Http\Request $request The HTTP request containing booking details.
+     *                                          Expected fields:
+     *                                          - date: string (required, format: Y-m-d, must be tomorrow or later)
+     *                                          - start_time: string (required, format: H:i)
+     *                                          - end_time: string (required, format: H:i, must be after start_time)
+     *                                          - type: string (required, one of: consultancy, assistance, commercial)
+     *                                          - firstname: string (required, max 255 characters)
+     *                                          - lastname: string (required, max 255 characters)
+     *                                          - phone: numeric (optional, min 10 digits)
+     *                                          - email: string (optional, valid email, max 255 characters)
+     *                                          - address: string (optional, max 255 characters)
+     *
+     * @return \Illuminate\Http\JsonResponse Returns a JSON response with the booking status.
+     *                                       - On success: 200 OK with success message.
+     *                                       - On validation failure: 422 Unprocessable Entity with error details.
+     *                                       - On booking limit reached: 406 Not Acceptable with error message.
+     *                                       - On booking duration exceeded: 406 Not Acceptable with error message.
+     *                                       - On booking overlap: 406 Not Acceptable with error message.
+     */
     public function makeBooking(Request $request)
     {
         $sendThresholdEmail = false;
@@ -66,8 +92,7 @@ class BookingController extends Controller
         }
 
         $existingBookings = $this->repository->getBookingsForDate($request);
-        Log::info('Bookings already present: '. count($existingBookings));
-        if(env('MAX_BOOKINGS_PER_DAY',12) < count($existingBookings)) {
+        if(env('MAX_BOOKINGS_PER_DAY',12) <= count($existingBookings)) {
             $responseBody = [
                 'status' => 'error',
                 'message' => 'maximum number of bookings reached for the given date'
@@ -77,12 +102,10 @@ class BookingController extends Controller
         }
 
         if(env('NUMBER_OF_BOOKINGS_EMAIL_THRESHOLD',10) == (count($existingBookings))) {
-            Log::info('Will send email notification to admin for booking threshold reached');
             $sendThresholdEmail = true;
         }
 
         $duration = $this->repository->getBookingDuration($request);
-        Log::info('Booking duration: '. $duration.' minutes');
         if(env('MAX_BOOKING_DURATION',45) < $duration) {
             $responseBody = [
                 'status' => 'error',
@@ -104,9 +127,16 @@ class BookingController extends Controller
         if($this->repository->saveBooking($request)){
             if($sendThresholdEmail){
                 // Send email notification to admin
+                Log::info('Will notify that 10 bookings are arrived. We are close to the threshold');
             }
 
             // Send emails for booking confirmation to client and admin
+            if($request->email){
+                // Send email to client
+                dispatch(new SendEmailQueueJob('confirmation_to_renter',$request->all(),$request->email));
+            }
+            // Send email to admin
+            dispatch(new SendEmailQueueJob('confirmation_to_admin',$request->all(),env('ADMIN_EMAIL')));
 
             // Return success response
             return response()->json([
