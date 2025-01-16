@@ -20,9 +20,10 @@ When 10 bookings are reached, the system sends an asyncronous email alert to the
 ### Endpoints
 
 • POST /api/bookings: Create a booking and save the data to the database with all necessary data validations
+
 • GET /api/bookings: retrieve all bookings given a date
 
-# For a complete documentation, created with scramble, visit root web route ("/")
+## For a complete documentation, created with scramble, visit root web route ("/")
 
 ### Error Handling
 
