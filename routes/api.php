@@ -22,6 +22,7 @@ use App\Http\Controllers\BookingController;
 
 Route::middleware('auth:api')->controller(BookingController::class)->group(function () {
     Route::post('bookings','makeBooking');
+    Route::get('bookings','getBookingsForDate');
 });
 
 Route::controller(AuthController::class)->group(function () {

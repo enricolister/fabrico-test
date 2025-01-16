@@ -21,12 +21,14 @@ class BookingRepository
      *
      * @return Collection A collection of Booking models for the specified date.
      */
-    public function getBookingsForDate(Request $request): Collection
+    public function getBookingsForDate(Request $request,bool $withRenter = false): Collection
     {
-        $bookings = Booking::whereDate('date',$request->date)
-            ->orderBy('date', 'asc')
-            ->get();
-        return $bookings;
+        $query = Booking::whereDate('date',$request->date)
+            ->orderBy('date', 'asc');
+        $query->when($withRenter, function ($query) {
+            return $query->with('renter');
+        });
+        return $query->get();
     }
 
     /**

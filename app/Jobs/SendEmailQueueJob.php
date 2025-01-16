@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\LogController;
+use App\Mail\sendApproachingBookingLimitToAdmin;
 use Throwable;
 
 class SendEmailQueueJob implements ShouldQueue
@@ -49,6 +50,10 @@ class SendEmailQueueJob implements ShouldQueue
         }
         if($this->type === 'confirmation_to_admin'){
             $email = new SendConfirmationEmailToAdmin($this->data);
+            Mail::to($this->mailTo)->send($email);
+        }
+        if($this->type === 'approaching_limit'){
+            $email = new sendApproachingBookingLimitToAdmin($this->data);
             Mail::to($this->mailTo)->send($email);
         }
     }

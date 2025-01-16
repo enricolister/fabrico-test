@@ -92,6 +92,7 @@ class BookingController extends Controller
         }
 
         $existingBookings = $this->repository->getBookingsForDate($request);
+
         if(env('MAX_BOOKINGS_PER_DAY',12) <= count($existingBookings)) {
             $responseBody = [
                 'status' => 'error',
@@ -101,7 +102,7 @@ class BookingController extends Controller
             return response()->json($responseBody, 406);
         }
 
-        if(env('NUMBER_OF_BOOKINGS_EMAIL_THRESHOLD',10) == (count($existingBookings))) {
+        if(env('NUMBER_OF_BOOKINGS_EMAIL_THRESHOLD',10) == (count($existingBookings)+1)) {
             $sendThresholdEmail = true;
         }
 
@@ -126,8 +127,8 @@ class BookingController extends Controller
 
         if($this->repository->saveBooking($request)){
             if($sendThresholdEmail){
-                // Send email notification to admin
-                Log::info('Will notify that 10 bookings are arrived. We are close to the threshold');
+                // Send email notification approaching booking limit to admin
+                dispatch(new SendEmailQueueJob('approaching_limit',$request->all(),env('ADMIN_EMAIL')));
             }
 
             // Send emails for booking confirmation to client and admin
@@ -144,7 +145,57 @@ class BookingController extends Controller
                 'message' => 'Booking made successfully'
             ]);
         }
+    }
 
+    /**
+     * Retrieves bookings for a specific date.
+     *
+     * This function retrieves all bookings for a given date from the database.
+     * It validates the input date and returns a JSON response with the bookings.
+     *
+     * @param \Illuminate\Http\Request $request The HTTP request containing the date.
+     *                                          Expected fields:
+     *                                          - date: string (required, format: Y-m-d)
+     *
+     * @return \Illuminate\Http\JsonResponse Returns a JSON response with the bookings for the given date.
+     *                                       - On success: 200 OK with an array of bookings.
+     *                                       - On validation failure: 422 Unprocessable Entity with error details.
+     */
+    public function getBookingsForDate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date_format:Y-m-d',
+        ],[
+            'date.required' => 'The date field is required.',
+            'date.date_format' => 'The date format must be Y-m-d.'
+        ]);
 
+        if ($validator->fails()) {
+            $responseBody = [
+                'status' => 'error',
+                'message' => 'bookings fields validation failed',
+                'fields' => $validator->errors()
+            ];
+            LogController::saveLog('booking_api','bookings',json_encode($responseBody));
+            return response()->json($responseBody, 422);
+        }
+
+        $bookings = $this->repository->getBookingsForDate($request,true);
+        $resArray = [];
+        foreach($bookings as $booking) {
+            $resArray[] = [
+                'id' => $booking->id,
+                'date' => $booking->date->format('Y-m-d'),
+                'start_time' => $booking->start_time->format('H:i'),
+                'end_time' => $booking->end_time->format('H:i'),
+                'type' => $booking->type,
+                'firstname' => $booking->renter->firstname,
+                'lastname' => $booking->renter->lastname,
+                'phone' => $booking->renter->phone,
+                'email' => $booking->renter->email,
+                'address' => $booking->renter->address
+            ];
+        }
+        return response()->json($resArray);
     }
 }

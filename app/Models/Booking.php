@@ -45,8 +45,8 @@ class Booking extends Model
      *
      * @return [type]
      */
-    public function language()
+    public function renter()
     {
-        return $this->hasOne(Renter::class);
+        return $this->belongsTo(Renter::class);
     }
 }
